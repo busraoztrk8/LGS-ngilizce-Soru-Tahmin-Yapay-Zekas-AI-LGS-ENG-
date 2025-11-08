@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>LGS İngilizce Analiz Raporu (2018-2024)</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  
+  <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+  
+  <style>
+    /* ---------------------------------- */
+    /* --- ŞIK DASHBOARD STİLLERİ --- */
+    /* (Arkadaşınızın dosyasından alındı) */
+    /* ---------------------------------- */
+    
+    :root {
+      --font-family: 'Inter', sans-serif;
+      --bg-color: #f4f7f6;
+      --card-bg-color: #ffffff;
+      --text-color: #2c3e50;
+      --header-color: #005a9c; /* Ana Tema Rengi */
+      --header-text: #ffffff;
+      --border-color: #e0e0e0;
+      --shadow: 0 4px 12px rgba(0,0,0,0.05);
+      --shadow-hover: 0 10px 20px rgba(0,0,0,0.07);
+      --badge-bg: #eaf5ff;
+      --badge-text: #005a9c;
+      --badge-bg-alt: #e8f3e8; /* Konu listesi için alternatif badge rengi */
+      --badge-text-alt: #216821;
+    }
+    
+    /* Temel Ayarlar */
+    * {
+      box-sizing: border-box;
+    }
+    
+    body { 
+      font-family: var(--font-family);
+      padding: 0;
+      margin: 0;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      line-height: 1.6;
+    }
+    
+    /* Header */
+    header {
+      background-color: var(--header-color);
+      color: var(--header-text);
+      padding: 30px 40px;
+      text-align: center;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    h1 { 
+      margin: 0;
+      font-weight: 700;
+      font-size: 2em;
+    }
+    
+    /* Ana İçerik Alanı */
+    main {
+      max-width: 1400px;
+      margin: 40px auto;
+      padding: 0 30px;
+    }
+    
+    h2 { 
+      color: #34495e;
+      border-bottom: 2px solid var(--border-color);
+      padding-bottom: 10px;
+      font-size: 1.5em;
+      margin-top: 0;
+    }
+    
+    /* Kart Tasarımı */
+    .container { 
+      margin-bottom: 30px;
+      padding: 24px 30px; 
+      border: 1px solid var(--border-color); 
+      border-radius: 12px; 
+      background-color: var(--card-bg-color);
+      box-shadow: var(--shadow);
+      transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+    }
+    
+    .container:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--shadow-hover);
+    }
+
+    /* Konu Listesi Kartı */
+    .topics-container {
+      display: flex;
+      flex-wrap: wrap; 
+      gap: 12px; 
+      padding-top: 10px;
+    }
+    
+    .topic-badge {
+      font-weight: 600;
+      color: var(--badge-text-alt);
+      background-color: var(--badge-bg-alt);
+      padding: 6px 14px;
+      border-radius: 16px;
+      font-size: 0.95em;
+      white-space: nowrap; 
+    }
+    
+    /* Grid (Dashboard) Düzeni */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+    }
+    
+    .full-width {
+      grid-column: 1 / -1;
+    }
+    
+    @media (max-width: 1000px) {
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Grafikler için div'ler */
+    #vis_basari, #vis1, #vis2 {
+      width: 100%;
+      min-height: 350px;
+    }
+    
+    /* Akordiyon Stilleri */
+    details {
+      margin-bottom: 10px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    
+    summary {
+      font-weight: 600;
+      font-size: 1.1em;
+      padding: 15px 20px;
+      background-color: #fdfdfd;
+      cursor: pointer;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      transition: background-color 0.2s;
+    }
+    
+    summary:hover {
+      background-color: #f9f9f9;
+    }
+    
+    /* CSS Chevron İkonu */
+    summary::before {
+      content: '›';
+      font-size: 1.8em;
+      font-weight: 700;
+      line-height: 1;
+      margin-right: 10px;
+      color: var(--header-color);
+      transition: transform 0.2s ease-in-out;
+    }
+    
+    details[open] summary::before {
+      transform: rotate(90deg);
+    }
+    
+    ul {
+      list-style-type: none;
+      padding: 15px 20px 20px 40px;
+      margin: 0;
+      border-top: 1px solid var(--border-color);
+      background-color: #fafcfe;
+    }
+    
+    li {
+      margin-bottom: 8px;
+      padding: 5px;
+      display: flex;
+      align-items: center;
+      font-size: 0.95em;
+    }
+    
+    /* Akordiyon içi Badge Stilleri */
+    li span {
+      font-weight: 600;
+      color: var(--badge-text);
+      background-color: var(--badge-bg);
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.9em;
+      display: inline-block;
+      min-width: 110px;
+      text-align: center;
+      margin-right: 15px;
+    }
+    
+    footer {
+      text-align: center;
+      margin-top: 40px;
+      padding: 20px;
+      color: #95a5a6;
+      font-size: 0.9em;
+    }
+    
+    /* ---------------------------------- */
+    /* --- YENİ EKLENEN STİLLER --- */
+    /* ---------------------------------- */
+    
+    /* Zorluk Tablosu Stilleri */
+    .styled-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      font-size: 0.95em;
+    }
+    
+    .styled-table th, .styled-table td {
+      border: 1px solid var(--border-color);
+      padding: 12px 15px;
+      text-align: left;
+    }
+    
+    .styled-table th {
+      background-color: #f8f9fa; /* Hafif başlık arkaplanı */
+      color: var(--header-color);
+      font-weight: 700;
+      font-size: 1.05em;
+    }
+    
+    .styled-table tr:nth-child(even) {
+      background-color: #fcfcfc;
+    }
+    
+    /* Zorluk Seviyesi Rozetleri */
+    .zor-kolay, .zor-orta, .zor-zor {
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 6px;
+      color: #fff;
+      text-align: center;
+      font-size: 0.9em;
+      display: inline-block;
+      min-width: 80px;
+    }
+    .zor-kolay { background-color: #27ae60; } /* Yeşil */
+    .zor-orta  { background-color: #f39c12; } /* Turuncu */
+    .zor-zor   { background-color: #c0392b; } /* Kırmızı */
+    
+    .note {
+      font-style: italic;
+      color: #7f8c8d;
+      background-color: #ecf0f1;
+      padding: 10px;
+      border-left: 4px solid #7f8c8d;
+      border-radius: 4px;
+      margin-bottom: 15px;
+    }
+
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>LGS İngilizce Analiz Raporu (2018-2024)</h1>
+  </header>
+  
+  <main>
+  
+    <div class="container full-width">
+      <h2>Yıllara Göre Genel Başarı Grafiği (İngilizce)</h2>
+      <p>LGS'ye giren tüm öğrencilerin İngilizce testindeki (10 Soru) ortalama başarı yüzdelerini göstermektedir.</p>
+      <div id="vis_basari"></div>
+    </div>
+    
+    <div class="container full-width">
+      <h2>Analiz Edilen LGS Konuları</h2>
+      <div class="topics-container">
+        <span class="topic-badge">Friendship</span>
+        <span class="topic-badge">Teen Life</span>
+        <span class="topic-badge">In the Kitchen</span>
+        <span class="topic-badge">On the Phone</span>
+        <span class="topic-badge">The Internet</span>
+        <span class="topic-badge">Adventures</span>
+        <span class="topic-badge">Tourısm</span>
+        <span class="topic-badge">Chores</span>
+        <span class="topic-badge">Science</span>
+        <span class="topic-badge">Natural Forces</span>
+      </div>
+    </div>
+    
+    <div class="dashboard-grid">
+      <div class="container">
+        <h2>Toplam Konu Dağılımı (Son 6 Yıl)</h2>
+        <p>Son 6 yılda (toplam 60 soru) en çok hangi konulardan soru çıktığını göstermektedir.</p>
+        <div id="vis1"></div>
+      </div>
+      
+      <div class="container">
+        <h2>Yıllara Göre Konu Dağılımı</h2>
+        <p>Her yıl 10 sorunun konulara göre nasıl dağıldığını göstermektedir.</p>
+        <div id="vis2"></div>
+      </div>
+    </div>
+
+    <div class="container full-width">
+      <h2>Konu Bazlı Tahmini Zorluk Derecesi</h2>
+      <p class="note">İngilizce'de zorluk genellikle ünitenin kendisinden çok, o ünitenin kelimelerini kullanarak sorulan <strong>soru tipinden</strong> (grafik okuma, uzun paragraf yorumlama, olumsuz soru kökü) kaynaklanır.</p>
+      
+      <table class="styled-table">
+        <thead>
+          <tr>
+            <th>Ünite</th>
+            <th>Genel Soru Tipi</th>
+            <th>Tahmini Zorluk</th>
+            <th>Açıklama</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1. Friendship</td>
+            <td>Diyalog, Davetiye (Invitation Card)</td>
+            <td><span class="zor-orta">Orta</span></td>
+            <td>"Refusing/Accepting" kalıpları ve davetiye detayları dikkat gerektirir.</td>
+          </tr>
+          <tr>
+            <td>2. Teen Life</td>
+            <td>Paragraf (Tercihler), Grafik Yorumlama</td>
+            <td><span class="zor-orta">Orta</span></td>
+            <td>Özellikle anket sonucu (survey result) içeren grafik soruları zorlayıcı olabilir.</td>
+          </tr>
+          <tr>
+            <td>3. In the Kitchen</td>
+            <td>Tarif (Recipe), Süreç Sıralama</td>
+            <td><span class="zor-zor">Zor</span></td>
+            <td>Çok fazla spesifik fiil (dice, stir, peel vb.) ezberi gerektirir. Sıralama soruları zorlayıcıdır.</td>
+          </tr>
+          <tr>
+            <td>4. On the Phone</td>
+            <td>Telefon Diyaloğu, Not Bırakma (Memo)</td>
+            <td><span class="zor-orta">Orta</span></td>
+            <td>"Hold on", "Put you through" gibi kalıplaşmış ifadelerin bilinmesi gerekir.</td>
+          </tr>
+          <tr>
+            <td>5. The Internet</td>
+            <td>Grafik Yorumlama, Paragraf (Güvenlik)</td>
+            <td><span class="zor-zor">Zor</span></td>
+            <td>Genellikle en zorlayıcı grafik okuma soruları bu üniteden gelir.</td>
+          </tr>
+          <tr>
+            <td>6. Adventures</td>
+            <td>Paragraf (Tercih ve Karşılaştırma)</td>
+            <td><span class="zor-orta">Orta</span></td>
+            <td>"Would rather", "Prefer" kalıpları ve macera sporları kelimeleri önemlidir.</td>
+          </tr>
+          <tr>
+            <td>7. Tourism</td>
+            <td>Paragraf (Deneyim), Broşür Yorumlama</td>
+            <td><span class="zor-orta">Orta</span></td>
+            <td>Bir poster/broşürden bilgi bulma soruları sıktır.</td>
+          </tr>
+          <tr>
+            <td>8. Chores</td>
+            <td>Diyalog, Sorumluluk Tablosu</td>
+            <td><span class="zor-kolay">Kolay/Orta</span></td>
+            <td>Genellikle daha basit diyaloglar veya sorumluluk tabloları sorulur.</td>
+          </tr>
+          <tr>
+            <td>9. Science</td>
+            <td>Paragraf (Bilim İnsanı), Süreç</td>
+            <td><span class="zor-orta">Orta</span></td>
+            <td>Bilimsel süreçleri anlatan metinler veya bilim insanlarının başarıları sorulur.</td>
+          </tr>
+          <tr>
+            <td>10. Natural Forces</td>
+            <td>Paragraf, Uyarı Levhaları</td>
+            <td><span class="zor-kolay">Kolay/Orta</span></td>
+            <td>Afetler ve alınacak önlemlerle ilgili basit metinler veya görsel yorumlama.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    
+    <div class="container full-width">
+      <h2>Soruların Konulara Göre Etiketlenmesi</h2>
+      <p>Aşağıda tüm soruların yıllara göre konu etiketlerini bulabilirsiniz. (Analize dahil edilen 2017-2018 yılı soruları da listelenmiştir.)</p>
+
+      <details>
+        <summary>2023-2024 Soruları</summary>
+        <ul>
+          <li><span>The Internet</span> Soru 1</li>
+          <li><span>Chores</span> Soru 2</li>
+          <li><span>Adventures</span> Soru 3</li>
+          <li><span>Teen Life</span> Soru 4</li>
+          <li><span>On the Phone</span> Soru 5</li>
+          <li><span>Adventures</span> Soru 6</li>
+          <li><span>In the Kitchen</span> Soru 7</li>
+          <li><span>Teen Life</span> Soru 8</li>
+          <li><span>Teen Life</span> Soru 9</li>
+          <li><span>Science</span> Soru 10</li>
+        </ul>
+      </details>
+
+      <details>
+        <summary>2022-2023 Soruları</summary>
+        <ul>
+          <li><span>Teen Life</span> Soru 1</li>
+          <li><span>In the Kitchen</span> Soru 2</li>
+          <li><span>The Internet</span> Soru 3</li>
+          <li><span>Friendship</span> Soru 4</li>
+          <li><span>Teen Life</span> Soru 5</li>
+          <li><span>On the Phone</span> Soru 6</li>
+          <li><span>On the Phone</span> Soru 7</li>
+          <li><span>The Internet</span> Soru 8</li>
+          <li><span>In the Kitchen</span> Soru 9</li>
+          <li><span>Friendship</span> Soru 10</li>
+        </ul>
+      </details>
+
+      <details>
+        <summary>2021-2022 Soruları</summary>
+        <ul>
+          <li><span>Friendship</span> Soru 1</li>
+          <li><span>On the Phone</span> Soru 2</li>
+          <li><span>Adventures</span> Soru 3</li>
+          <li><span>Teen Life</span> Soru 4</li>
+          <li><span>Teen Life</span> Soru 5</li>
+          <li><span>Tourism</span> Soru 6</li>
+          <li><span>Chores</span> Soru 7</li>
+          <li><span>Teen Life</span> Soru 8</li>
+          <li><span>Science</span> Soru 9</li>
+          <li><span>In the Kitchen</span> Soru 10</li>
+        </ul>
+      </details>
+
+      <details>
+        <summary>2020-2021 Soruları</summary>
+        <ul>
+          <li><span>Teen Life</span> Soru 1</li>
+          <li><span>Friendship</span> Soru 2</li>
+          <li><span>In the Kitchen</span> Soru 3</li>
+          <li><span>On the Phone</span> Soru 4</li>
+          <li><span>Chores</span> Soru 5</li>
+          <li><span>Science</span> Soru 6</li>
+          <li><span>Tourism</span> Soru 7</li>
+          <li><span>Teen Life</span> Soru 8</li>
+          <li><span>Adventures</span> Soru 9</li>
+          <li><span>The Internet</span> Soru 10</li>
+        </ul>
+      </details>
+
+      <details>
+        <summary>2019-2020 Soruları</summary>
+        <ul>
+          <li><span>Friendship</span> Soru 1</li>
+          <li><span>On the Phone</span> Soru 2</li>
+          <li><span>Teen Life</span> Soru 3</li>
+          <li><span>In the Kitchen</span> Soru 4</li>
+          <li><span>In the Kitchen</span> Soru 5</li>
+          <li><span>On the Phone</span> Soru 6</li>
+          <li><span>Teen Life</span> Soru 7</li>
+          <li><span>Friendship</span> Soru 8</li>
+          <li><span>On the Phone</span> Soru 9</li>
+          <li><span>The Internet</span> Soru 10</li>
+        </ul>
+      </details>
+
+      <details>
+        <summary>2018-2019 Soruları</summary>
+        <ul>
+          <li><span>Friendship</span> Soru 1</li>
+          <li><span>Chores</span> Soru 2</li>
+          <li><span>Teen Life</span> Soru 3</li>
+          <li><span>On the Phone</span> Soru 4</li>
+          <li><span>Teen Life</span> Soru 5</li>
+          <li><span>Adventures</span> Soru 6</li>
+          <li><span>Tourism</span> Soru 7</li>
+          <li><span>Science</span> Soru 8</li>
+          <li><span>The Internet</span> Soru 9</li>
+          <li><span>In the Kitchen</span> Soru 10</li>
+        </ul>
+      </details>
+      
+      <details>
+        <summary>2017-2018 Soruları</summary>
+        <ul>
+          <li><span>The Internet</span> Soru 1</li>
+          <li><span>Tourism</span> Soru 2</li>
+          <li><span>Teen Life</span> Soru 3</li>
+          <li><span>Friendship</span> Soru 4</li>
+          <li><span>Teen Life</span> Soru 5</li>
+          <li><span>In the Kitchen</span> Soru 6</li>
+          <li><span>Adventures</span> Soru 7</li>
+          <li><span>Chores</span> Soru 8</li>
+          <li><span>Tourism</span> Soru 9</li>
+          <li><span>Tourism</span> Soru 10</li>
+        </ul>
+      </details>
+    </div>
+    
+  </main>
+  
+  <footer>
+    <p>Bu interaktif rapor, Gemini tarafından sizin için hazırlandı.</p>
+  </footer>
+
+  <script>
+    // --- GRAFİK AYARLARI ---
+    
+    // Tüm grafikler için ortak, modern ayarlar
+    const vegaConfig = {
+      "font": "Inter, sans-serif",
+      "view": {"stroke": "transparent"},
+      "axis": {
+        "labelFont": "Inter, sans-serif",
+        "titleFont": "Inter, sans-serif",
+        "titleFontWeight": 600,
+        "labelFontSize": 12,
+        "titleFontSize": 14
+      },
+      "legend": {
+        "labelFont": "Inter, sans-serif",
+        "titleFont": "Inter, sans-serif",
+        "titleFontWeight": 600,
+        "labelFontSize": 12,
+        "titleFontSize": 14
+      },
+      "header": {
+        "labelFont": "Inter, sans-serif",
+        "titleFont": "Inter, sans-serif"
+      },
+      "mark": {
+        "font": "Inter, sans-serif"
+      },
+      "title": {
+        "font": "Inter, sans-serif",
+        "fontWeight": 700
+      }
+    };
+    
+    // --- YENİ GRAFİK: BAŞARI YÜZDESİ (İSTEĞİNİZE GÖRE EKLENDİ) ---
+    const spec_basari = {
+      "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+      "data": {
+        "values": [
+          {"Yıl": "2018", "Başarı Yüzdesi": 51.4, "Doğru Ort.": 5.14},
+          {"Yıl": "2019", "Başarı Yüzdesi": 46.5, "Doğru Ort.": 4.65},
+          {"Yıl": "2020", "Başarı Yüzdesi": 35.3, "Doğru Ort.": 3.53},
+          {"Yıl": "2021", "Başarı Yüzdesi": 49.3, "Doğru Ort.": 4.93},
+          {"Yıl": "2022", "Başarı Yüzdesi": 45.9, "Doğru Ort.": 4.59},
+          {"Yıl": "2023", "Başarı Yüzdesi": 49.1, "Doğru Ort.": 4.91},
+          {"Yıl": "2024", "Başarı Yüzdesi": 51.5, "Doğru Ort.": 5.15}
+        ]
+      },
+      "mark": {"type": "bar", "cornerRadius": 4, "tooltip": true},
+      "encoding": {
+        "x": {"field": "Yıl", "type": "ordinal", "title": "Sınav Yılı"},
+        "y": {"field": "Başarı Yüzdesi", "type": "quantitative", "title": "Başarı (%)", "axis": {"format": ".1f"}},
+        "tooltip": [
+          {"field": "Yıl", "title": "Yıl"}, 
+          {"field": "Başarı Yüzdesi", "title": "Başarı", "format": ".1f"},
+          {"field": "Doğru Ort.", "title": "10 Soru Üzerinden", "format": ".2f"}
+        ],
+        "color": {
+          "field": "Başarı Yüzdesi",
+          "type": "quantitative",
+          "scale": {"range": ["#e74c3c", "#f39c12", "#2ecc71"], "domain": [35, 45, 52]},
+          "legend": {"title": "Başarı %"}
+        }
+      },
+      "width": "container", 
+      "height": 350,
+      "interactive": true
+    };
+    vegaEmbed('#vis_basari', spec_basari, { "actions": false, "config": vegaConfig }).catch(console.error);
+    
+    // --- Grafik 1 (Arkadaşınızın kodundan) ---
+    const spec1 = {
+      "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+      "data": {
+        "values": [
+          {"Konu": "Teen Life", "Soru Sayısı": 14},
+          {"Konu": "On the Phone", "Soru Sayısı": 9},
+          {"Konu": "In the Kitchen", "Soru Sayısı": 8},
+          {"Konu": "Friendship", "Soru Sayısı": 7},
+          {"Konu": "The Internet", "Soru Sayısı": 6},
+          {"Konu": "Adventures", "Soru Sayısı": 5},
+          {"Konu": "Chores", "Soru Sayısı": 4},
+          {"Konu": "Science", "Soru Sayısı": 4},
+          {"KonU": "Tourism", "Soru Sayısı": 3}
+        ]
+      },
+      "mark": {"type": "bar", "cornerRadius": 4},
+      "encoding": {
+        "x": {"field": "Konu", "type": "nominal", "sort": "-y", "title": null},
+        "y": {"field": "Soru Sayısı", "type": "quantitative", "title": "Toplam Soru Sayısı"},
+        "tooltip": [{"field": "Konu"}, {"field": "Soru Sayısı"}],
+        "color": {
+          "field": "Konu", 
+          "type": "nominal", 
+          "legend": null, 
+          "scheme": "tableau10" 
+        }
+      },
+      "width": "container", 
+      "height": 350,
+      "interactive": true
+    };
+    vegaEmbed('#vis1', spec1, { "actions": false, "config": vegaConfig }).catch(console.error);
+
+    // --- Grafik 2 (Arkadaşınızın kodundan) ---
+    const spec2 = {
+      "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+      "data": {
+        "values": [
+          {"Yıl": "2018-19", "Konu": "Friendship", "Soru Sayısı": 1},
+          {"Yıl": "2018-19", "Konu": "Chores", "Soru Sayısı": 1},
+          {"Yıl": "2018-19", "Konu": "Teen Life", "Soru Sayısı": 2},
+          {"Yıl": "2018-19", "Konu": "On the Phone", "Soru Sayısı": 1},
+          {"Yıl": "2018-19", "Konu": "Adventures", "Soru Sayısı": 1},
+          {"Yıl": "2018-19", "Konu": "Tourism", "Soru Sayısı": 1},
+          {"Yıl": "2018-19", "Konu": "Science", "Soru Sayısı": 1},
+          {"Yıl": "2018-19", "Konu": "The Internet", "Soru Sayısı": 1},
+          {"Yıl": "2018-19", "Konu": "In the Kitchen", "Soru Sayısı": 1},
+          {"Yıl": "2019-20", "Konu": "Friendship", "Soru Sayısı": 2},
+          {"Yıl": "2019-20", "Konu": "On the Phone", "Soru Sayısı": 3},
+          {"Yıl": "2019-20", "Konu": "Teen Life", "Soru Sayısı": 2},
+          {"Yıl": "2019-20", "Konu": "In the Kitchen", "Soru Sayısı": 2},
+          {"Yıl": "2019-20", "Konu": "The Internet", "Soru Sayısı": 1},
+          {"Yıl": "2020-21", "Konu": "Teen Life", "Soru Sayısı": 2},
+          {"Yıl": "2020-21", "Konu": "Friendship", "Soru Sayısı": 1},
+          {"Yıl": "2020-21", "Konu": "In the Kitchen", "Soru Sayısı": 1},
+          {"Yıl": "2020-21", "Konu": "On the Phone", "Soru Sayısı": 1},
+          {"Yıl": "2020-21", "Konu": "Chores", "Soru Sayısı": 1},
+          {"Yıl": "2020-21", "Konu": "Science", "Soru Sayısı": 1},
+          {"Yıl": "2020-21", "Konu": "Tourism", "Soru Sayısı": 1},
+          {"Yıl": "2020-21", "Konu": "Adventures", "Soru Sayısı": 1},
+          {"Yıl": "2020-21", "Konu": "The Internet", "Soru Sayısı": 1},
+          {"Yıl": "2021-22", "Konu": "Friendship", "Soru Sayısı": 1},
+          {"Yıl": "2021-22", "Konu": "On the Phone", "Soru Sayısı": 1},
+          {"Yıl": "2021-22", "Konu": "Adventures", "Soru Sayısı": 1},
+          {"Yıl": "2021-22", "Konu": "Teen Life", "Soru Sayısı": 3},
+          {"Yıl": "2021-22", "Konu": "Tourism", "Soru Sayısı": 1},
+          {"Yıl": "2021-22", "Konu": "Chores", "Soru Sayısı": 1},
+          {"Yıl": "2021-22", "Konu": "Science", "Soru Sayısı": 1},
+          {"Yıl": "2021-22", "Konu": "In the Kitchen", "Soru Sayısı": 1},
+          {"Yıl": "2022-23", "Konu": "Teen Life", "Soru Sayısı": 2},
+          {"Yıl": "2022-23", "Konu": "In the Kitchen", "Soru Sayısı": 2},
+          {"Yıl": "2022-23", "Konu": "The Internet", "Soru Sayısı": 2},
+          {"Yıl": "2022-23", "Konu": "Friendship", "Soru Sayısı": 2},
+          {"Yıl": "2022-23", "Konu": "On the Phone", "Soru Sayısı": 2},
+          {"Yıl": "2023-24", "Konu": "The Internet", "Soru Sayısı": 1},
+          {"Yıl": "2023-24", "Konu": "Chores", "Soru Sayısı": 1},
+          {"Yıl": "2023-24", "Konu": "Adventures", "Soru Sayısı": 2},
+          {"Yıl": "2023-24", "Konu": "Teen Life", "Soru Sayısı": 3},
+          {"Yıl": "2023-24", "Konu": "On the Phone", "Soru Sayısı": 1},
+          {"Yıl": "2023-24", "Konu": "In the Kitchen", "Soru Sayısı": 1},
+          {"Yıl": "2023-24", "Konu": "Science", "Soru Sayısı": 1}
+        ]
+      },
+      "mark": "bar",
+      "encoding": {
+        "x": {"field": "Yıl", "type": "nominal", "title": "Eğitim-Öğretim Yılı"},
+        "y": {"field": "Soru Sayısı", "type": "quantitative", "title": "Soru Sayısı"},
+        "color": {
+          "field": "Konu", 
+          "type": "nominal", 
+          "title": "Konular", 
+          "scheme": "tableau10"
+        },
+        "tooltip": [{"field": "Yıl"}, {"field": "Konu"}, {"field": "Soru Sayısı"}]
+      },
+      "width": "container", 
+      "height": 350,
+      "interactive": true
+    };
+    vegaEmbed('#vis2', spec2, { "actions": false, "config": vegaConfig }).catch(console.error);
+  </script>
+
+</body>
+</html>
