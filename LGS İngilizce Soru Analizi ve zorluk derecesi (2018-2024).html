@@ -265,6 +265,22 @@
       border-radius: 4px;
       margin-bottom: 15px;
     }
+    /* --- Soru Tipi Grafiği --- */
+#chart-soru-tipi {
+  width: 100%;
+  min-height: 400px;
+  margin-top: 15px;
+}
+/* --- Yıl Bazlı Grafik --- */
+.chart-space {
+  margin-top: 60px;
+}
+
+#chart-soru-yil {
+  width: 100%;
+  min-height: 400px;
+}
+
 
   </style>
 </head>
@@ -506,11 +522,25 @@
         </ul>
       </details>
     </div>
-    
+        <div class="container full-width">
+      <h2>Soru Tipi Dağılımı (2018–2024)</h2>
+      <p>Son 6 yıldaki tüm sınavlarda hangi türde soru tiplerinin daha sık sorulduğunu gösterir.</p>
+
+      <div id="chart-soru-tipi" style="width:100%; min-height:400px;"></div>
+    </div>
+      <div class="chart-space"></div>
+
+      <h2>Soru Tipi Dağılımı – Yıllara Göre (2018–2024)</h2>
+      <p>Her yıl hangi tür soru tiplerinin öne çıktığını gösterir.</p>
+      <div id="chart-soru-yil" style="width:100%; min-height:400px;"></div>
+
   </main>
   
   <footer>
-    <p>Bu interaktif rapor, Gemini tarafından sizin için hazırlandı.</p>
+    <p style="text-align:center; color:#7f8c8d; font-size:0.9em;">
+ *Veriler 2018–2024 arası LGS İngilizce soru tiplerine dayanmaktadır.
+</p>
+
   </footer>
 
   <script>
@@ -684,7 +714,108 @@
       "interactive": true
     };
     vegaEmbed('#vis2', spec2, { "actions": false, "config": vegaConfig }).catch(console.error);
-  </script>
+
+     const soruTipiVeri = [
+  { tip: "Eşleştirme/Kıyaslama", sayi: 14 },
+  { tip: "Diyalog/Boşluk Doldurma", sayi: 12 },
+  { tip: "Okuma/Metin Anlama", sayi: 11 },
+  { tip: "Görsel Yorumlama", sayi: 5 },
+  { tip: "Sıralama", sayi: 3 },
+  { tip: "Karşılıklı Konuşma", sayi: 3 },
+  { tip: "Kelime Bilgisi", sayi: 2 }
+];
+
+const chartSpec = {
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "description": "Soru tipi dağılımı",
+  "data": { "values": soruTipiVeri },
+  "mark": { "type": "bar", "cornerRadiusTopLeft": 6, "cornerRadiusTopRight": 6 },
+  "encoding": {
+    "x": {
+      "field": "tip",
+      "type": "nominal",
+      "axis": { "labelAngle": -20, "labelFontSize": 12, "title": null }
+    },
+    "y": {
+      "field": "sayi",
+      "type": "quantitative",
+      "axis": { "title": "Soru Sayısı" }
+    },
+    "color": {
+      "field": "tip",
+      "type": "nominal",
+      "legend": null,
+      "scale": { "scheme": "blues" }
+    },
+    "tooltip": [
+      { "field": "tip", "title": "Soru Tipi" },
+      { "field": "sayi", "title": "Toplam Soru" }
+    ]
+  },
+  "width": "container",
+  "height": 350
+};
+
+vegaEmbed('#chart-soru-tipi', chartSpec, { actions: false });
+
+const soruTipiYilVeri = [
+  { yil: "2018", tip: "Eşleştirme/Kıyaslama", sayi: 3 },
+  { yil: "2018", tip: "Okuma/Metin Anlama", sayi: 2 },
+  { yil: "2018", tip: "Kelime Bilgisi", sayi: 1 },
+  { yil: "2019", tip: "Eşleştirme/Kıyaslama", sayi: 3 },
+  { yil: "2019", tip: "Diyalog/Boşluk Doldurma", sayi: 2 },
+  { yil: "2019", tip: "Okuma/Metin Anlama", sayi: 2 },
+  { yil: "2020", tip: "Eşleştirme/Kıyaslama", sayi: 2 },
+  { yil: "2020", tip: "Diyalog/Boşluk Doldurma", sayi: 2 },
+  { yil: "2020", tip: "Görsel Yorumlama", sayi: 1 },
+  { yil: "2021", tip: "Okuma/Metin Anlama", sayi: 3 },
+  { yil: "2021", tip: "Karşılıklı Konuşma", sayi: 1 },
+  { yil: "2021", tip: "Eşleştirme/Kıyaslama", sayi: 1 },
+  { yil: "2022", tip: "Okuma/Metin Anlama", sayi: 2 },
+  { yil: "2022", tip: "Sıralama", sayi: 1 },
+  { yil: "2023", tip: "Eşleştirme/Kıyaslama", sayi: 2 },
+  { yil: "2023", tip: "Diyalog/Boşluk Doldurma", sayi: 3 },
+  { yil: "2023", tip: "Görsel Yorumlama", sayi: 2 },
+  { yil: "2024", tip: "Okuma/Metin Anlama", sayi: 2 },
+  { yil: "2024", tip: "Kelime Bilgisi", sayi: 1 },
+  { yil: "2024", tip: "Eşleştirme/Kıyaslama", sayi: 3 }
+];
+
+const chartYilSpec = {
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "description": "Soru tipi dağılımı – yıllara göre",
+  "data": { "values": soruTipiYilVeri },
+  "mark": { "type": "bar", "cornerRadiusTopLeft": 5, "cornerRadiusTopRight": 5 },
+  "encoding": {
+    "x": {
+      "field": "yil",
+      "type": "ordinal",
+      "axis": { "labelAngle": 0, "title": "Sınav Yılı" }
+    },
+    "y": {
+      "aggregate": "sum",
+      "field": "sayi",
+      "type": "quantitative",
+      "axis": { "title": "Toplam Soru" }
+    },
+    "color": {
+      "field": "tip",
+      "type": "nominal",
+      "legend": { "title": "Soru Tipi" }
+    },
+    "tooltip": [
+      { "field": "yil", "title": "Yıl" },
+      { "field": "tip", "title": "Soru Tipi" },
+      { "field": "sayi", "title": "Sayı" }
+    ]
+  },
+  "width": "container",
+  "height": 350
+};
+
+vegaEmbed('#chart-soru-yil', chartYilSpec, { actions: false });
+
+</script>
 
 </body>
 </html>
